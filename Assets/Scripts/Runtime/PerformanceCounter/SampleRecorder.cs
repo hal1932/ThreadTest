@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using PerformanceCounter.Internal;
 
 namespace PerformanceCounter
@@ -6,8 +7,6 @@ namespace PerformanceCounter
     public class SampleRecorder
     {
         public event EventHandler<SampleValue[]> OnRecordRequested;
-
-        public const int SampleSize = 8;
 
         public bool CopyBufferOnRecordRequestd { get; set; }
 
@@ -37,7 +36,7 @@ namespace PerformanceCounter
                 if (CopyBufferOnRecordRequestd)
                 {
                     var valuesClone = new SampleValue[values.Length];
-                    Buffer.BlockCopy(values, 0, valuesClone, 0, values.Length * SampleSize);
+                    Array.Copy(values, valuesClone, values.Length);
                     values = valuesClone;
                 }
                 OnRecordRequested.Invoke(this, values);
