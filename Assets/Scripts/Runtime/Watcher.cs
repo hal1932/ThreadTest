@@ -15,18 +15,14 @@ public class Watcher : MonoBehaviour
         _loggingThread = Task.Factory.StartNew(LoggingThread, _loggingCancelTokenSource.Token);
         _logSources = new LogSource[_recorders.Length];
 
-        foreach (var recorder in _recorders)
-        {
-            recorder.Start();
-        }
+        _recorders.OnRecordRequested += OnRequestLogging;
+        _recorders.Start();
     }
 
     public void OnDisable()
     {
-        foreach (var recorder in _recorders)
-        {
-            recorder.Stop();
-        }
+        _recorders.Stop();
+        _recorders.OnRecordRequested -= OnRequestLogging;
 
         _loggingCancelTokenSource.Cancel();
         _logSources = default;
@@ -38,26 +34,25 @@ public class Watcher : MonoBehaviour
 
     public void LateUpdate()
     {
-        foreach (var recorder in _recorders)
-        {
-            recorder.Record();
-        }
+        _recorders.Record();
+    }
 
-        if (_recorders[0].IsFull)
+    private void OnRequestLogging(object sender, EventArgs e)
+    {
+        lock (_logSourcesLock)
         {
-            lock (_logSourcesLock)
+            for (var i = 0; i < _recorders.Length; ++i)
             {
-                for (var i = 0; i < _recorders.Length; ++i)
+                var target = _recorders.GetTarget(i);
+                var recorder = _recorders.GetRecorder(target);
+                _logSources[i] = new LogSource()
                 {
-                    _logSources[i] = new LogSource()
-                    {
-                        Recorder = _recorders[i],
-                        Samples = _recorders[i].Swap()
-                    };
-                }
+                    Recorder = recorder,
+                    Samples = recorder.LastSamples,
+                };
             }
-            _startLogging.Set();
         }
+        _startLogging.Set();
     }
 
     private void LoggingThread()
@@ -88,28 +83,31 @@ public class Watcher : MonoBehaviour
                     }
 
                     var text = log.ToString();
-                    //Debug.Log(text);
+                    Debug.Log(text);
 
-                    var content = new MultipartFormDataContent();
-                    content.Add(new StringContent(text, Encoding.UTF8, "text/plain"), "logs");
-                    _logSendingHttpClient.PostAsync("http://127.0.0.1:5000", content)
-                        .ContinueWith(res => Debug.Log(res.Result.StatusCode));
-                    Debug.Log("SEND");
+                    //var content = new MultipartFormDataContent();
+                    //content.Add(new StringContent(text, Encoding.UTF8, "text/plain"), "logs");
+                    //_logSendingHttpClient.PostAsync("http://127.0.0.1:5000", content)
+                    //    .ContinueWith(res => Debug.Log(res.Result.StatusCode));
+                    //Debug.Log("SEND");
                 }
             }
         }
     }
 
-    private readonly SampleRecorder[] _recorders = new SampleRecorder[]
-    {
-        new SampleRecorder(SamplingTarget.TotalUsedMemory, 100),
-        new SampleRecorder(SamplingTarget.TotalReservedMemory, 100),
-        new SampleRecorder(SamplingTarget.MainThreadTime, 100),
-        new SampleRecorder(SamplingTarget.SetPassCallsCount, 100),
-        new SampleRecorder(SamplingTarget.DrawCallsCount, 100),
-        new SampleRecorder(SamplingTarget.TotalBatchesCount, 100),
-        new SampleRecorder(SamplingTarget.VerticesCount, 100),
-    };
+    private readonly SampleRecorderGroup _recorders = new SampleRecorderGroup(
+        new[]
+        {
+            SamplingTarget.TotalUsedMemory,
+            SamplingTarget.TotalReservedMemory,
+            SamplingTarget.MainThreadTime,
+            SamplingTarget.SetPassCallsCount,
+            SamplingTarget.DrawCallsCount,
+            SamplingTarget.BatchesCount,
+            SamplingTarget.VerticesCount,
+        },
+        100
+        );
 
     private readonly Dictionary<SamplingTarget, Action<SampleValue, StringBuilder>> _loggers = new Dictionary<SamplingTarget, Action<SampleValue, StringBuilder>>()
     {
@@ -118,7 +116,7 @@ public class Watcher : MonoBehaviour
         { SamplingTarget.MainThreadTime, (sample, builder) => builder.AppendLine($"{sample.DoubleValue / (1000 * 1000):F3} ms") },
         { SamplingTarget.SetPassCallsCount, (sample, builder) => builder.AppendLine($"{sample.LongValue}") },
         { SamplingTarget.DrawCallsCount, (sample, builder) => builder.AppendLine($"{sample.LongValue}") },
-        { SamplingTarget.TotalBatchesCount, (sample, builder) => builder.AppendLine($"{sample.LongValue}") },
+        { SamplingTarget.BatchesCount, (sample, builder) => builder.AppendLine($"{sample.LongValue}") },
         { SamplingTarget.VerticesCount, (sample, builder) => builder.AppendLine($"{sample.LongValue}") },
     };
 

@@ -1,7 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 namespace PerformanceCounter.Internal
 {
     public class MultiBufferedList<T>
@@ -9,6 +5,7 @@ namespace PerformanceCounter.Internal
         public int BufferCount => _buffers.Length;
         public int Capacity => _buffers[0].Length;
         public int Length => _itemOffset;
+        public T[] LastSwappedBuffer => _buffers[_lastBufferIndex];
 
         public T this[int index]
         {
@@ -53,18 +50,19 @@ namespace PerformanceCounter.Internal
 
         public T[] Swap()
         {
-            var lastIndex = _bufferIndex;
+            _lastBufferIndex = _bufferIndex;
             ++_bufferIndex;
             if (_bufferIndex >= _buffers.Length)
             {
                 _bufferIndex = 0;
             }
             Clear();
-            return _buffers[lastIndex];
+            return _buffers[_lastBufferIndex];
         }
 
         private T[][] _buffers;
         private int _bufferIndex;
+        private int _lastBufferIndex;
         private int _itemOffset;
     }
 }

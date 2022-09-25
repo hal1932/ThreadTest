@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using PerformanceCounter.Internal;
 
 namespace PerformanceCounter
@@ -12,6 +11,7 @@ namespace PerformanceCounter
 
         public SamplingTarget Target => _sampler.Target;
         public bool IsFull => _samples.Length == _samples.Capacity;
+        public SampleValue[] LastSamples => _samples.LastSwappedBuffer;
 
         public SampleRecorder(SamplingTarget target, int capacity)
             : this(new Sampler(target), capacity)
