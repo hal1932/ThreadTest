@@ -9,6 +9,8 @@ namespace PerformanceCounter
 
         public const int SampleSize = 8;
 
+        public bool CopyBufferOnRecordRequestd { get; set; }
+
         public SamplingTarget Target => _sampler.Target;
         public bool IsFull => _samples.Length == _samples.Capacity;
 
@@ -32,9 +34,13 @@ namespace PerformanceCounter
             if (OnRecordRequested != default && IsFull)
             {
                 var values = Swap();
-                var valuesClone = new SampleValue[values.Length];
-                values.CopyTo(valuesClone, 0);
-                OnRecordRequested.Invoke(this, valuesClone);
+                if (CopyBufferOnRecordRequestd)
+                {
+                    var valuesClone = new SampleValue[values.Length];
+                    Buffer.BlockCopy(values, 0, valuesClone, 0, values.Length * SampleSize);
+                    values = valuesClone;
+                }
+                OnRecordRequested.Invoke(this, values);
             }
         }
 
