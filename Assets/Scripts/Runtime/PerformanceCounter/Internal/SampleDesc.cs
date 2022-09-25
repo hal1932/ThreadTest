@@ -73,11 +73,11 @@ namespace PerformanceCounter.Internal
                 }
             },
             {
-                SamplingTarget.TotalBatchesCount,
+                SamplingTarget.BatchesCount,
                 new SampleDesc
                 {
                     Category = ProfilerCategory.Render,
-                    StatName = "Total Batches Count",
+                    StatName = "Batches Count",
                     Capacity = 1,
                     SampleSelector = SampleSelectors.LongValue,
                 }
