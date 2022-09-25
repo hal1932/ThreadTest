@@ -103,15 +103,23 @@ public class Watcher : MonoBehaviour
     private readonly SampleRecorder[] _recorders = new SampleRecorder[]
     {
         new SampleRecorder(SamplingTarget.TotalUsedMemory, 100),
-        new SampleRecorder(SamplingTarget.ReservedMemory, 100),
+        new SampleRecorder(SamplingTarget.TotalReservedMemory, 100),
         new SampleRecorder(SamplingTarget.MainThreadTime, 100),
+        new SampleRecorder(SamplingTarget.SetPassCallsCount, 100),
+        new SampleRecorder(SamplingTarget.DrawCallsCount, 100),
+        new SampleRecorder(SamplingTarget.TotalBatchesCount, 100),
+        new SampleRecorder(SamplingTarget.VerticesCount, 100),
     };
 
     private readonly Dictionary<SamplingTarget, Action<SampleValue, StringBuilder>> _loggers = new Dictionary<SamplingTarget, Action<SampleValue, StringBuilder>>()
     {
         { SamplingTarget.TotalUsedMemory, (sample, builder) => builder.AppendLine($"{sample.LongValue / (1024 * 1024):F3} MB") },
-        { SamplingTarget.ReservedMemory, (sample, builder) => builder.AppendLine($"{sample.LongValue / (1024 * 1024):F3} MB") },
+        { SamplingTarget.TotalReservedMemory, (sample, builder) => builder.AppendLine($"{sample.LongValue / (1024 * 1024):F3} MB") },
         { SamplingTarget.MainThreadTime, (sample, builder) => builder.AppendLine($"{sample.DoubleValue / (1000 * 1000):F3} ms") },
+        { SamplingTarget.SetPassCallsCount, (sample, builder) => builder.AppendLine($"{sample.LongValue}") },
+        { SamplingTarget.DrawCallsCount, (sample, builder) => builder.AppendLine($"{sample.LongValue}") },
+        { SamplingTarget.TotalBatchesCount, (sample, builder) => builder.AppendLine($"{sample.LongValue}") },
+        { SamplingTarget.VerticesCount, (sample, builder) => builder.AppendLine($"{sample.LongValue}") },
     };
 
     private struct LogSource

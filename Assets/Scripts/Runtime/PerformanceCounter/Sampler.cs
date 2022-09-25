@@ -14,8 +14,12 @@ namespace PerformanceCounter
     public enum SamplingTarget
     {
         TotalUsedMemory,
-        ReservedMemory,
+        TotalReservedMemory,
         MainThreadTime,
+        SetPassCallsCount,
+        DrawCallsCount,
+        TotalBatchesCount,
+        VerticesCount,
     }
 
     public class Sampler

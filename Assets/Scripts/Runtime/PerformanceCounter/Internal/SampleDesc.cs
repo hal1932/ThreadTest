@@ -33,7 +33,7 @@ namespace PerformanceCounter.Internal
                 }
             },
             {
-                SamplingTarget.ReservedMemory,
+                SamplingTarget.TotalReservedMemory,
                 new SampleDesc
                 {
                     Category = ProfilerCategory.Memory,
@@ -50,6 +50,46 @@ namespace PerformanceCounter.Internal
                     StatName = "Main Thread",
                     Capacity = 15,
                     SampleSelector = SampleSelectors.DoubleValue,
+                }
+            },
+            {
+                SamplingTarget.SetPassCallsCount,
+                new SampleDesc
+                {
+                    Category = ProfilerCategory.Render,
+                    StatName = "SetPass Calls Count",
+                    Capacity = 1,
+                    SampleSelector = SampleSelectors.LongValue,
+                }
+            },
+            {
+                SamplingTarget.DrawCallsCount,
+                new SampleDesc
+                {
+                    Category = ProfilerCategory.Render,
+                    StatName = "Draw Calls Count",
+                    Capacity = 1,
+                    SampleSelector = SampleSelectors.LongValue,
+                }
+            },
+            {
+                SamplingTarget.TotalBatchesCount,
+                new SampleDesc
+                {
+                    Category = ProfilerCategory.Render,
+                    StatName = "Total Batches Count",
+                    Capacity = 1,
+                    SampleSelector = SampleSelectors.LongValue,
+                }
+            },
+            {
+                SamplingTarget.VerticesCount,
+                new SampleDesc
+                {
+                    Category = ProfilerCategory.Render,
+                    StatName = "Vertices Count",
+                    Capacity = 1,
+                    SampleSelector = SampleSelectors.LongValue,
                 }
             },
         };
