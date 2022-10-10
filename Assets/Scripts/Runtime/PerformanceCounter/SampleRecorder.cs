@@ -1,14 +1,9 @@
-using System;
 using PerformanceCounter.Internal;
 
 namespace PerformanceCounter
 {
     public class SampleRecorder
     {
-        public event EventHandler<SampleValue[]> OnRecordRequested;
-
-        public bool CopyBufferOnRecordRequestd { get; set; }
-
         public SamplingTarget Target => _sampler.Target;
         public bool IsFull => _samples.Length == _samples.Capacity;
         public int Capacity => _samples.Capacity;
@@ -33,18 +28,6 @@ namespace PerformanceCounter
         public void Record()
         {
             _samples.Add(_sampler.Sample());
-
-            if (OnRecordRequested != default && IsFull)
-            {
-                var values = Swap();
-                if (CopyBufferOnRecordRequestd)
-                {
-                    var valuesClone = new SampleValue[values.Length];
-                    Array.Copy(values, valuesClone, values.Length);
-                    values = valuesClone;
-                }
-                OnRecordRequested.Invoke(this, values);
-            }
         }
 
         public SampleValue[] Swap()

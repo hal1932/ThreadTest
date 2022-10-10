@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
+using PerformanceCounter.Internal;
 
 namespace PerformanceCounter
 {
     public class SampleRecorderGroup
     {
-        public event EventHandler OnRecordRequested;
-
         public SampleRecorderGroup(params SamplingTarget[] targets)
         {
             _targets = new SamplingTarget[targets.Length];
@@ -43,12 +42,8 @@ namespace PerformanceCounter
                 recorder.Stop();
             }
 
-            _logger.BeginWrite(_recorders[0].CurrentLength);
-            for (var i = 0; i < _targets.Length; ++i)
-            {
-                _logger.Write(_targets[i], _recorders[i].CurrentSamples);
-            }
-            _logger.EndWrite();
+            var count = _recorders.Max(rec => rec.CurrentLength);
+            WriteLog(count, rec => rec.CurrentSamples);
 
             _logger.Stop();
         }
@@ -69,15 +64,20 @@ namespace PerformanceCounter
                 {
                     recorder.Swap();
                 }
-                //OnRecordRequested?.Invoke(this, EventArgs.Empty);
 
-                _logger.BeginWrite(_recorders[0].Capacity);
-                for (var i = 0; i < _targets.Length; ++i)
-                {
-                    _logger.Write(_targets[i], _recorders[i].LastSamples);
-                }
-                _logger.EndWrite();
+                var count = _recorders.Max(rec => rec.Capacity);
+                WriteLog(count, rec => rec.LastSamples);
             }
+        }
+
+        private void WriteLog(int valueCount, Func<SampleRecorder, SampleValue[]> valuesSelector)
+        {
+            _logger.BeginWrite(valueCount);
+            for (var i = 0; i < _targets.Length; ++i)
+            {
+                _logger.Write(_targets[i], valuesSelector(_recorders[i]));
+            }
+            _logger.EndWrite();
         }
 
         private SamplingTarget[] _targets;

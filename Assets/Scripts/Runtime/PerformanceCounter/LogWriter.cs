@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using PerformanceCounter.Internal;
 using UnityEngine;
 
 namespace PerformanceCounter
@@ -41,21 +42,22 @@ namespace PerformanceCounter
             _client.Dispose();
         }
 
-        public void BeginWrite(int valueCount)
+        public void BeginWrite(int maxValueCount)
         {
             _samplesLock.EnterWriteLock();
-            _sampleCount = valueCount;
-            if (_samples.Length < valueCount)
+            _maxValueCount = maxValueCount;
+            if (_samples.Length < maxValueCount)
             {
-                _samples = new PerformanceSample[valueCount];
+                _samples = new PerformanceSample[maxValueCount];
             }
         }
 
         public void Write(SamplingTarget target, SampleValue[] values)
         {
-            for (var i = 0; i < _sampleCount; ++i)
+            var setter = PerformanceSample.ValueSetters[target];
+            for (var i = 0; i < _maxValueCount; ++i)
             {
-                PerformanceSample.Loaders[target](ref _samples[i], values[i]);
+                setter(ref _samples[i], values[i]);
             }
         }
 
@@ -83,19 +85,19 @@ namespace PerformanceCounter
 
                 _samplesLock.EnterWriteLock();
                 {
-                    samples = new PerformanceSample[_sampleCount];
-                    Array.Copy(_samples, samples, _sampleCount);
-                    _sampleCount = 0;
+                    samples = new PerformanceSample[_maxValueCount];
+                    Array.Copy(_samples, samples, _maxValueCount);
+                    _maxValueCount = 0;
                 }
                 _samplesLock.ExitWriteLock();
 
                 SendSamples(samples);
             }
 
-            if (_sampleCount > 0)
+            if (_maxValueCount > 0)
             {
-                samples = new PerformanceSample[_sampleCount];
-                Array.Copy(_samples, samples, _sampleCount);
+                samples = new PerformanceSample[_maxValueCount];
+                Array.Copy(_samples, samples, _maxValueCount);
                 SendSamples(samples);
             }
         }
@@ -118,7 +120,7 @@ namespace PerformanceCounter
         }
 
         private PerformanceSample[] _samples = Array.Empty<PerformanceSample>();
-        private int _sampleCount;
+        private int _maxValueCount;
         private ReaderWriterLockSlim _samplesLock;
 
         private Task _task;
@@ -141,7 +143,7 @@ namespace PerformanceCounter
 
         public delegate void LoadValue(ref PerformanceSample sample, SampleValue value);
 
-        public static readonly Dictionary<SamplingTarget, LoadValue> Loaders = new Dictionary<SamplingTarget, LoadValue>()
+        public static readonly Dictionary<SamplingTarget, LoadValue> ValueSetters = new Dictionary<SamplingTarget, LoadValue>()
         {
             { SamplingTarget.TimeFromStartup, SetTime },
             { SamplingTarget.TotalUsedMemory, SetMemory },

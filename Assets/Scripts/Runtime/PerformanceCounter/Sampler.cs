@@ -1,28 +1,8 @@
-using System.Runtime.InteropServices;
 using PerformanceCounter.Internal;
 using Unity.Profiling;
 
 namespace PerformanceCounter
 {
-    [StructLayout(LayoutKind.Explicit)]
-    public struct SampleValue
-    {
-        [FieldOffset(0)] public long LongValue;
-        [FieldOffset(0)] public double DoubleValue;
-    }
-
-    public enum SamplingTarget
-    {
-        TimeFromStartup = 0,
-        TotalUsedMemory,
-        TotalReservedMemory,
-        MainThreadTime,
-        SetPassCallsCount,
-        DrawCallsCount,
-        BatchesCount,
-        VerticesCount,
-    }
-
     public class Sampler
     {
         public SamplingTarget Target { get; }

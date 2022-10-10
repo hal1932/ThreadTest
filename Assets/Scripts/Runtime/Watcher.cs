@@ -1,4 +1,5 @@
 using PerformanceCounter;
+using PerformanceCounter.Internal;
 using UnityEngine;
 
 public class Watcher : MonoBehaviour
