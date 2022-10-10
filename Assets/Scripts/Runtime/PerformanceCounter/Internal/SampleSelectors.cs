@@ -1,9 +1,13 @@
 using Unity.Profiling;
+using UnityEngine;
 
 namespace PerformanceCounter.Internal
 {
     public class SampleSelectors
     {
+        public static SampleValue TimeValue(ProfilerRecorder recorder)
+            => new SampleValue { DoubleValue = Time.realtimeSinceStartup };
+
         public static SampleValue LongValue(ProfilerRecorder recorder)
         {
             var sampleCount = recorder.Capacity;

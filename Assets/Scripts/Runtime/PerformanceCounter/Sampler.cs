@@ -13,7 +13,8 @@ namespace PerformanceCounter
 
     public enum SamplingTarget
     {
-        TotalUsedMemory = 0,
+        TimeFromStartup = 0,
+        TotalUsedMemory,
         TotalReservedMemory,
         MainThreadTime,
         SetPassCallsCount,
@@ -44,7 +45,7 @@ namespace PerformanceCounter
         }
 
         public SampleValue Sample()
-            =>  _desc.SampleSelector(_recorder);
+            =>  _desc.SelectSample(_recorder);
 
         private SampleDesc _desc;
         private ProfilerRecorder _recorder;

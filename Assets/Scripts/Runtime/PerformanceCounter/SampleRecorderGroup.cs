@@ -7,22 +7,30 @@ namespace PerformanceCounter
     {
         public event EventHandler OnRecordRequested;
 
-        public int Length => _recorders.Count;
-
-        public SampleRecorderGroup(SamplingTarget[] targets, int capacity)
+        public SampleRecorderGroup(params SamplingTarget[] targets)
         {
             _targets = new SamplingTarget[targets.Length];
             Array.Copy(targets, _targets, targets.Length);
+        }
 
-            foreach (var target in targets)
+        public void SetLogger(ILogWriter logger)
+        {
+            _logger = logger;
+        }
+
+        public void Alloc(int capacity)
+        {
+            _recorders = new SampleRecorder[_targets.Length];
+            for (var i = 0; i < _targets.Length; ++i)
             {
-                _recorders[target] = new SampleRecorder(target, capacity);
+                _recorders[i] = new SampleRecorder(_targets[i], capacity);
             }
         }
 
         public void Start()
         {
-            foreach (var recorder in _recorders.Values)
+            _logger.Start();
+            foreach (var recorder in _recorders)
             {
                 recorder.Start();
             }
@@ -30,38 +38,50 @@ namespace PerformanceCounter
 
         public void Stop()
         {
-            foreach (var recorder in _recorders.Values)
+            foreach (var recorder in _recorders)
             {
                 recorder.Stop();
             }
+
+            _logger.BeginWrite(_recorders[0].CurrentLength);
+            for (var i = 0; i < _targets.Length; ++i)
+            {
+                _logger.Write(_targets[i], _recorders[i].CurrentSamples);
+            }
+            _logger.EndWrite();
+
+            _logger.Stop();
         }
 
         public void Record()
         {
             var isFull = false;
-            foreach (var recorder in _recorders.Values)
+            foreach (var recorder in _recorders)
             {
                 recorder.Record();
                 isFull = recorder.IsFull;
             }
 
+
             if (isFull)
             {
-                foreach (var recorder in _recorders.Values)
+                foreach (var recorder in _recorders)
                 {
                     recorder.Swap();
                 }
-                OnRecordRequested?.Invoke(this, EventArgs.Empty);
+                //OnRecordRequested?.Invoke(this, EventArgs.Empty);
+
+                _logger.BeginWrite(_recorders[0].Capacity);
+                for (var i = 0; i < _targets.Length; ++i)
+                {
+                    _logger.Write(_targets[i], _recorders[i].LastSamples);
+                }
+                _logger.EndWrite();
             }
         }
 
-        public SamplingTarget GetTarget(int index)
-            => _targets[index];
-
-        public SampleRecorder GetRecorder(SamplingTarget target)
-            => _recorders[target];
-
         private SamplingTarget[] _targets;
-        private Dictionary<SamplingTarget, SampleRecorder> _recorders = new Dictionary<SamplingTarget, SampleRecorder>();
+        private SampleRecorder[] _recorders;
+        private ILogWriter _logger;
     }
 }

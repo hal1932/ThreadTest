@@ -6,10 +6,12 @@ namespace PerformanceCounter.Internal
 {
     public struct SampleDesc
     {
+        public delegate SampleValue OnSelectSample(ProfilerRecorder recorder);
+
         public ProfilerCategory Category;
         public string StatName;
         public int Capacity;
-        public Func<ProfilerRecorder, SampleValue> SampleSelector;
+        public OnSelectSample SelectSample;
 
         public static SampleDesc Create(SamplingTarget target)
         {
@@ -23,23 +25,23 @@ namespace PerformanceCounter.Internal
         private static readonly Dictionary<SamplingTarget, SampleDesc> _templates = new Dictionary<SamplingTarget, SampleDesc>()
         {
             {
+                SamplingTarget.TimeFromStartup,
+                new SampleDesc
+                {
+                    Category = default,
+                    StatName = "Time From Startup",
+                    Capacity = 1,
+                    SelectSample = SampleSelectors.TimeValue,
+                }
+            },
+            {
                 SamplingTarget.TotalUsedMemory,
                 new SampleDesc
                 {
                     Category = ProfilerCategory.Memory,
                     StatName = "Total Used Memory",
                     Capacity = 1,
-                    SampleSelector = SampleSelectors.LongValue,
-                }
-            },
-            {
-                SamplingTarget.TotalReservedMemory,
-                new SampleDesc
-                {
-                    Category = ProfilerCategory.Memory,
-                    StatName = "GC Reserved Memory",
-                    Capacity = 1,
-                    SampleSelector = SampleSelectors.LongValue,
+                    SelectSample = SampleSelectors.LongValue,
                 }
             },
             {
@@ -49,7 +51,7 @@ namespace PerformanceCounter.Internal
                     Category = ProfilerCategory.Internal,
                     StatName = "Main Thread",
                     Capacity = 15,
-                    SampleSelector = SampleSelectors.DoubleValue,
+                    SelectSample = SampleSelectors.DoubleValue,
                 }
             },
             {
@@ -59,7 +61,7 @@ namespace PerformanceCounter.Internal
                     Category = ProfilerCategory.Render,
                     StatName = "SetPass Calls Count",
                     Capacity = 1,
-                    SampleSelector = SampleSelectors.LongValue,
+                    SelectSample = SampleSelectors.LongValue,
                 }
             },
             {
@@ -69,7 +71,7 @@ namespace PerformanceCounter.Internal
                     Category = ProfilerCategory.Render,
                     StatName = "Draw Calls Count",
                     Capacity = 1,
-                    SampleSelector = SampleSelectors.LongValue,
+                    SelectSample = SampleSelectors.LongValue,
                 }
             },
             {
@@ -79,7 +81,7 @@ namespace PerformanceCounter.Internal
                     Category = ProfilerCategory.Render,
                     StatName = "Batches Count",
                     Capacity = 1,
-                    SampleSelector = SampleSelectors.LongValue,
+                    SelectSample = SampleSelectors.LongValue,
                 }
             },
             {
@@ -89,7 +91,7 @@ namespace PerformanceCounter.Internal
                     Category = ProfilerCategory.Render,
                     StatName = "Vertices Count",
                     Capacity = 1,
-                    SampleSelector = SampleSelectors.LongValue,
+                    SelectSample = SampleSelectors.LongValue,
                 }
             },
         };

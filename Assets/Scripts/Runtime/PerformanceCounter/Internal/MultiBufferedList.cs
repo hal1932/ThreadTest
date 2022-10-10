@@ -6,6 +6,7 @@ namespace PerformanceCounter.Internal
         public int Capacity => _buffers[0].Length;
         public int Length => _itemOffset;
         public T[] LastSwappedBuffer => _buffers[_lastBufferIndex];
+        public T[] CurrentBuffer => _buffers[_bufferIndex];
 
         public T this[int index]
         {

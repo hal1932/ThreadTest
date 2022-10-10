@@ -11,7 +11,11 @@ namespace PerformanceCounter
 
         public SamplingTarget Target => _sampler.Target;
         public bool IsFull => _samples.Length == _samples.Capacity;
+        public int Capacity => _samples.Capacity;
         public SampleValue[] LastSamples => _samples.LastSwappedBuffer;
+
+        public int CurrentLength => _samples.Length;
+        public SampleValue[] CurrentSamples => _samples.CurrentBuffer;
 
         public SampleRecorder(SamplingTarget target, int capacity)
             : this(new Sampler(target), capacity)
