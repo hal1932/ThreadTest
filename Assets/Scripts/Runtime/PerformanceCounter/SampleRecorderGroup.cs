@@ -19,10 +19,11 @@ namespace PerformanceCounter
 
         public void Alloc(int capacity)
         {
+            _sampleCapacity = capacity;
             _recorders = new SampleRecorder[_targets.Length];
             for (var i = 0; i < _targets.Length; ++i)
             {
-                _recorders[i] = new SampleRecorder(_targets[i], capacity);
+                _recorders[i] = new SampleRecorder(_targets[i], _sampleCapacity);
             }
         }
 
@@ -42,8 +43,7 @@ namespace PerformanceCounter
                 recorder.Stop();
             }
 
-            var count = _recorders.Max(rec => rec.CurrentLength);
-            WriteLog(count, rec => rec.CurrentSamples);
+            WriteLog(_sampleCount, rec => rec.CurrentSamples);
 
             _logger.Stop();
         }
@@ -56,6 +56,7 @@ namespace PerformanceCounter
                 recorder.Record();
                 isFull = recorder.IsFull;
             }
+            ++_sampleCount;
 
 
             if (isFull)
@@ -64,19 +65,19 @@ namespace PerformanceCounter
                 {
                     recorder.Swap();
                 }
+                _sampleCount = 0;
 
-                var count = _recorders.Max(rec => rec.Capacity);
-                WriteLog(count, rec => rec.LastSamples);
+                WriteLog(_sampleCapacity, rec => rec.LastSamples);
             }
         }
 
-        private void WriteLog(int valueCount, Func<SampleRecorder, SampleValue[]> valuesSelector)
+        private void WriteLog(int valueCount, Func<SampleRecorder, SampleValue[]> samplesSelector)
         {
             using (var writer = _logger.CreateWriter(valueCount))
             {
                 for (var i = 0; i < _targets.Length; ++i)
                 {
-                    writer.Write(_targets[i], valuesSelector(_recorders[i]));
+                    writer.Write(_targets[i], samplesSelector(_recorders[i]));
                 }
             }
         }
@@ -84,5 +85,8 @@ namespace PerformanceCounter
         private SamplingTarget[] _targets;
         private SampleRecorder[] _recorders;
         private ISampleLogger _logger;
+
+        private int _sampleCapacity;
+        private int _sampleCount;
     }
 }
