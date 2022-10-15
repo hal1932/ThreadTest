@@ -6,7 +6,7 @@ public class Watcher : MonoBehaviour
 {
     public void OnEnable()
     {
-        _recorders.SetLogger(new HttpLogWriter());
+        _recorders.SetLogger(new HttpSampleLogger());
         _recorders.Alloc(100);
         _recorders.Start();
     }

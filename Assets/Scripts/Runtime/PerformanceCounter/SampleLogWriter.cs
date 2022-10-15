@@ -9,17 +9,30 @@ using UnityEngine;
 
 namespace PerformanceCounter
 {
-    public interface ILogWriter
+    public interface ISampleLogger
     {
         void Start();
         void Stop();
+
+        SampleLogWriter CreateWriter(int maxValueCount);
 
         void BeginWrite(int valueCount);
         void Write(SamplingTarget target, SampleValue[] values);
         void EndWrite();
     }
 
-    public class HttpLogWriter : ILogWriter
+    public struct SampleLogWriter : IDisposable
+    {
+        public ISampleLogger Writer { private get; set; }
+
+        public void Write(SamplingTarget target, SampleValue[] values)
+            => Writer.Write(target, values);
+
+        public void Dispose()
+            => Writer.EndWrite();
+    }
+
+    public class HttpSampleLogger : ISampleLogger
     {
         public void Start()
         {
@@ -40,6 +53,12 @@ namespace PerformanceCounter
             _sendEvent.Dispose();
             _samplesLock.Dispose();
             _client.Dispose();
+        }
+
+        public SampleLogWriter CreateWriter(int maxValueCount)
+        {
+            BeginWrite(maxValueCount);
+            return new SampleLogWriter() { Writer = this };
         }
 
         public void BeginWrite(int maxValueCount)

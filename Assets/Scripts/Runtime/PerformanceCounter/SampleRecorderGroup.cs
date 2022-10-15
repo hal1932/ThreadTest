@@ -12,7 +12,7 @@ namespace PerformanceCounter
             Array.Copy(targets, _targets, targets.Length);
         }
 
-        public void SetLogger(ILogWriter logger)
+        public void SetLogger(ISampleLogger logger)
         {
             _logger = logger;
         }
@@ -72,16 +72,17 @@ namespace PerformanceCounter
 
         private void WriteLog(int valueCount, Func<SampleRecorder, SampleValue[]> valuesSelector)
         {
-            _logger.BeginWrite(valueCount);
-            for (var i = 0; i < _targets.Length; ++i)
+            using (var writer = _logger.CreateWriter(valueCount))
             {
-                _logger.Write(_targets[i], valuesSelector(_recorders[i]));
+                for (var i = 0; i < _targets.Length; ++i)
+                {
+                    writer.Write(_targets[i], valuesSelector(_recorders[i]));
+                }
             }
-            _logger.EndWrite();
         }
 
         private SamplingTarget[] _targets;
         private SampleRecorder[] _recorders;
-        private ILogWriter _logger;
+        private ISampleLogger _logger;
     }
 }
